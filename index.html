@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+    <html lang="zh-CN">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>通知车主挪车</title>
+        <style>
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          :root {
+            --primary-color: #4776E6;
+            --secondary-color: #8E54E9;
+            --text-color: #2c3e50;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+          }
+          body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: var(--text-color);
+            padding: 20px;
+            line-height: 1.6;
+          }
+          .container { 
+            text-align: center; 
+            padding: 40px 30px; 
+            width: 100%; 
+            max-width: 450px; 
+            border-radius: 24px; 
+            box-shadow: 0 10px 40px var(--shadow-color);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            transform: translateY(0);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          .container:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+          }
+          h1 { 
+            font-size: 20px; 
+            margin-bottom: 25px; 
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+          }
+          .car-icon {
+            font-size: 64px;
+            margin-bottom: 5px;
+            display: inline-block;
+            animation: float 6s ease-in-out infinite;
+          }
+          p { 
+            margin-bottom: 30px; 
+            font-size: 18px; 
+            color: #546e7a;
+            line-height: 1.8;
+          }
+          .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+          }
+          button { 
+            width: 100%; 
+            padding: 16px 24px; 
+            font-size: 18px; 
+            font-weight: 600; 
+            color: #fff; 
+            border: none; 
+            border-radius: 16px; 
+            cursor: pointer; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+          }
+          button:active {
+            transform: scale(0.98);
+          }
+          .notify-btn { 
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 4px 15px rgba(71, 118, 230, 0.2);
+          }
+          .call-btn { 
+            background: linear-gradient(45deg, #00b09b, #96c93d);
+            box-shadow: 0 4px 15px rgba(0, 176, 155, 0.2);
+          }
+          .call-btn:hover { 
+            box-shadow: 0 6px 20px rgba(0, 176, 155, 0.3);
+            transform: translateY(-2px);
+          }
+          @keyframes float {
+            0% {
+              transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+              transform: translateY(-20px) rotate(5deg);
+            }
+            100% {
+              transform: translateY(0px) rotate(0deg);
+            }
+          }
+          .loading {
+            position: relative;
+            pointer-events: none;
+          }
+          .loading::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.8s linear infinite;
+            margin-left: 10px;
+          }
+          @keyframes spin {
+            to {
+              transform: rotate(360deg);
+            }
+          }
+          .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 16px;
+            opacity: 0;
+            transition: opacity 0.3s;
+          }
+          .toast.show {
+            opacity: 1;
+          }
+       
+            .message-area {
+                margin-bottom: 20px;
+            }
+       
+            .char-count {
+        text-align: right;
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
+       
+      textarea {
+        width: 100%;
+        height: 120px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        resize: none;
+        font-size: 16px;
+        margin-bottom: 5px;
+      }
+      .char-count.error {
+            color: red; /* 超过200字符时变红 */
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+        }
+        .btn-disabled {
+            background-color: lightgray; /* 禁用状态的按钮颜色 */
+            cursor: not-allowed;
+            box-shadow: 0 6px 20px rgba(71, 118, 230, 0.3);
+            transform: translateY(-2px);
+        }
+        .templates {
+            display: grid; /* 使用 Grid 布局 */
+            grid-template-columns: repeat(4, 1fr); /* 创建 4 列，每列等分空间 */
+            gap: 10px; /* 列之间的间隔 */
+      }
+      .template-btn {
+        background: #f8f9fa;
+        color: black; /* 白色文字 */
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 8px 15px;
+        margin: 0 5px 5px 0;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s ease;
+      }
+        
+      .template-btn:hover {
+        background: #e9ecef;
+      }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="car-icon">&#128663;</div>
+          <br>
+          <!--车牌使用GitHub开源项目生成：https://github.com/Pengfei8324/chinese_license_plate_generator-->
+          <!--因法律法规，无法放出在线生成连接，各位自行生成-->
+          <img width='30%' margin-bottom='10px' src='车牌图片连接'>
+          <h1><p>不好意思阻碍到您的出行了<br>您可留言通知我，我会立即前来挪车</p></h1>
+          <div class="message-area">
+        <textarea id="messageInput" placeholder="请输入通知内容"></textarea>
+        <div id="charCount" class="char-count">0/200</div>
+        <div class="templates">
+        <button class="template-btn" onc脱敏lick="useTemplate('您好，有人需要您挪车，请及时处理。')">挪车</button>
+        <button class="template-btn" onc脱敏lick="useTemplate('车主，您爱车的车窗未关，请及时处理一下哦。')">未关窗</button>
+        <button class="template-btn" onc脱敏lick="useTemplate('车主，您爱车的车灯未关，请及时处理一下哦。')">未关灯</button>
+        <button class="template-btn" onc脱敏lick="useTemplate('交警来了！赶快开走！')">交警</button>
+      </div>
+      </div>
+          
+          <div class="button-group">
+            <button id="notifyBtn" class="notify-btn" onclick="notifyOwner()">微信通知 &#128241;</button>
+            <button class="call-btn" onclick="callOwner()">电话联系 &#128222;</button>
+          </div>
+        </div>
+        <div id="toast" class="toast"></div>
+        <script>
+    const messageInput = document.getElementById('messageInput');
+    const charCount = document.getElementById('charCount');
+    const notifyBtn = document.getElementById('notifyBtn');
+    // 在脚本开始处定义全局变量
+      let submitCount = 0;
+        const maxSubmissions = 5;
+        const resetTime = 24 * 60 * 60 * 1000; // 24小时
+ 
+        // 检查提交次数
+        function checkSubmissions() {
+            const lastSubmissionTime = localStorage.getItem('lastSubmissionTime');
+            const currentTime = new Date().getTime();
+ 
+            // 如果存在上次提交时间且在24小时内
+            if (lastSubmissionTime && (currentTime - lastSubmissionTime < resetTime)) {
+                submitCount = parseInt(localStorage.getItem('submitCount')) || 0;
+            } else {
+                // 超过24小时，重置次数
+                submitCount = 0;
+                localStorage.setItem('lastSubmissionTime', currentTime);
+            }
+ 
+            // 更新提交次数
+            localStorage.setItem('submitCount', submitCount);
+        }
+ 
+ 
+    // 更新字符计数和按钮状态
+    function updateCharCount() {
+        const messageLength = messageInput.value.length;
+        charCount.textContent = `${messageLength}/200`;
+ 
+        if (messageLength > 200) {
+            charCount.textContent = `内容过多！无法发送！`;
+            charCount.classList.add('error'); // 超过200字符时变红
+            notifyBtn.disabled = true; // 禁用发送通知按钮
+            notifyBtn.classList.remove('notify-btn');
+            notifyBtn.classList.add('btn-disabled');
+        } else {
+            charCount.classList.remove('error'); // 恢复颜色
+            notifyBtn.disabled = false; // 启用发送通知按钮
+            notifyBtn.classList.remove('btn-disabled');
+            notifyBtn.classList.add('notify-btn');
+        }
+    }
+ 
+    // 监听输入事件
+    messageInput.addEventListener('input', updateCharCount);
+     
+      // 使用模板消息
+      function useTemplate(template) {
+        const messageInput = document.getElementById('messageInput');
+        messageInput.value = template;
+        updateCharCount();
+      }
+    // 调用飞书 Webhook 发送通知
+      function notifyOwner() {
+        const messageInput = document.getElementById('messageInput');
+        const message = messageInput.value.trim();
+        const badWords = ['11', '22', '33'];  /////脏话关键词
+         
+        if (!message) {
+          alert('请输入通知内容');
+          return;
+        }
+        // 检查消息中是否包含脏话
+        const foundWords = badWords.filter(badWord => message.includes(badWord));
+ 
+        if (foundWords.length > 0) {
+            alert('请文明用语！');
+            return;
+        } 
+        checkSubmissions();
+ 
+            if (submitCount < maxSubmissions) {
+                console.log('提交成功');
+                submitCount++;
+                localStorage.setItem('submitCount', submitCount);
+            } else {
+                alert('您今天已经提交了五次，无法再提交！');
+                return;
+            }
+ 
+        const notifyBtn = document.getElementById('notifyBtn');
+        notifyBtn.disabled = true;
+        notifyBtn.textContent = '发送中...';
+  
+        fetch("https://wxpusher.zjiecode.com/api/send/message", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                  appToken:"AT_xxxxxxxxxxxxxxxxxxx", //appToken
+                  topicIds:["12345"], //通知组号，可根据官方api更改推送个人
+                  content:message,
+                  contentType:1,
+                  verifyPay:false
+              })
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.code === 1000) {
+                alert("通知已发送！");
+                console.log("通知发送成功", data);
+                notifyBtn.textContent = '发送成功！';
+                messageInput.value = ''; // 清空输入框
+                updateCharCount(); // 更新字符计数
+              } else {
+                alert("通知发送失败，请稍后重试。");
+                console.error("发送通知失败", error);
+                notifyBtn.textContent = '发送失败！';
+              }
+            })
+            .catch(error => {
+              console.error("Error sending notification:", error);
+              alert("通知发送出错，请检查网络连接。");
+            });
+      }
+     
+    // 使用模板消息
+      function useTemplate(template) {
+        const messageInput = document.getElementById('messageInput');
+        messageInput.value = template;
+        updateCharCount();
+      }
+    // 显示拨打电话的确认框
+      function showCallModal() {
+        const formattedNumber = formatPhoneNumber(phoneNumber);
+        document.getElementById('modalPhoneNumber').textContent = formattedNumber;
+        document.getElementById('callModal').style.display = 'block';
+      }
+  
+      // 隐藏拨打电话的确认框
+      function hideCallModal() {
+        document.getElementById('callModal').style.display = 'none';
+      }
+  
+      // 拨打车主电话
+      function callOwner() {
+        window.location.href = `tel:13800138000`;
+        hideCallModal();
+      }
+  
+      // 页面加载完成后初始化
+      document.addEventListener('DOMContentLoaded', () => {
+        useTemplate('您好，有人需要您挪车，请及时处理。');
+      });
+      // 页面加载时检查提交次数
+        window.onload = checkSubmissions;
+</script>
+      </body>
+    </html>
