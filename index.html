@@ -210,10 +210,10 @@
         <textarea id="messageInput" placeholder="请输入通知内容"></textarea>
         <div id="charCount" class="char-count">0/200</div>
         <div class="templates">
-        <button class="template-btn" onc脱敏lick="useTemplate('您好，有人需要您挪车，请及时处理。')">挪车</button>
-        <button class="template-btn" onc脱敏lick="useTemplate('车主，您爱车的车窗未关，请及时处理一下哦。')">未关窗</button>
-        <button class="template-btn" onc脱敏lick="useTemplate('车主，您爱车的车灯未关，请及时处理一下哦。')">未关灯</button>
-        <button class="template-btn" onc脱敏lick="useTemplate('交警来了！赶快开走！')">交警</button>
+        <button class="template-btn" onclick="useTemplate('您好，有人需要您挪车，请及时处理。')">挪车</button>
+        <button class="template-btn" onclick="useTemplate('车主，您爱车的车窗未关，请及时处理一下哦。')">未关窗</button>
+        <button class="template-btn" onclick="useTemplate('车主，您爱车的车灯未关，请及时处理一下哦。')">未关灯</button>
+        <button class="template-btn" onclick="useTemplate('交警来了！赶快开走！')">交警</button>
       </div>
       </div>
           
@@ -316,7 +316,7 @@
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                   appToken:"AT_jqMiLYCzQPiJgpOaBMI0BqSBq7wop3ib", //appToken
-                  topicIds:["UID_QII5WX1ySenWa7TjjNQoevuk69p3"], //通知组号，可根据官方api更改推送个人
+                  uids:["UID_QII5WX1ySenWa7TjjNQoevuk69p3"], //通知组号，可根据官方api更改推送个人
                   content:message,
                   contentType:1,
                   verifyPay:false
